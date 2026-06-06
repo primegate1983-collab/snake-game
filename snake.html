@@ -14,15 +14,17 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
       background: #050510;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
       font-family: 'Inter', sans-serif;
       overflow: hidden;
+      touch-action: none;
     }
 
     /* Animated background */
@@ -66,20 +68,23 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 12px 10px;
       gap: 0;
     }
 
     /* Title */
     .title-area {
       text-align: center;
-      margin-bottom: 22px;
+      margin-bottom: 8px;
     }
 
     h1 {
       font-family: 'Orbitron', monospace;
       font-weight: 900;
-      font-size: 3rem;
-      letter-spacing: 12px;
+      font-size: clamp(1.4rem, 6vw, 2.8rem);
+      letter-spacing: 8px;
       background: linear-gradient(135deg, #00ffc6, #7b2fff, #ff2d78);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -94,36 +99,35 @@
     }
 
     .subtitle {
-      font-size: 0.7rem;
-      letter-spacing: 6px;
+      font-size: clamp(0.5rem, 2vw, 0.7rem);
+      letter-spacing: 5px;
       color: rgba(255,255,255,0.3);
       font-family: 'Orbitron', monospace;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     /* Score panel */
     .score-panel {
       display: flex;
-      gap: 24px;
-      margin-bottom: 18px;
+      gap: 14px;
+      margin-bottom: 10px;
     }
 
     .score-card {
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,255,255,0.08);
       backdrop-filter: blur(12px);
-      border-radius: 14px;
-      padding: 10px 28px;
+      border-radius: 12px;
+      padding: 6px 20px;
       text-align: center;
-      min-width: 110px;
-      transition: border-color 0.3s;
+      min-width: 90px;
     }
 
     .score-card:first-child { border-color: rgba(0,255,198,0.25); }
     .score-card:last-child  { border-color: rgba(123,47,255,0.25); }
 
     .score-label {
-      font-size: 0.65rem;
+      font-size: clamp(0.5rem, 2vw, 0.65rem);
       letter-spacing: 3px;
       color: rgba(255,255,255,0.35);
       text-transform: uppercase;
@@ -133,25 +137,27 @@
     .score-value {
       font-family: 'Orbitron', monospace;
       font-weight: 700;
-      font-size: 1.8rem;
+      font-size: clamp(1.2rem, 5vw, 1.8rem);
       line-height: 1.2;
     }
 
     #score-display { color: #00ffc6; text-shadow: 0 0 12px rgba(0,255,198,0.6); }
     #best-display  { color: #c77dff; text-shadow: 0 0 12px rgba(199,125,255,0.6); }
 
-    /* Canvas wrapper */
+    /* Canvas wrapper — fills remaining space */
     .canvas-wrapper {
       position: relative;
-      border-radius: 18px;
+      border-radius: 16px;
       padding: 3px;
       background: linear-gradient(135deg, #00ffc6, #7b2fff, #ff2d78, #00ffc6);
       background-size: 300% 300%;
       animation: borderSpin 4s linear infinite;
-      box-shadow:
-        0 0 40px rgba(123,47,255,0.4),
-        0 0 80px rgba(0,255,198,0.15),
-        inset 0 0 40px rgba(0,0,0,0.5);
+      box-shadow: 0 0 40px rgba(123,47,255,0.4), 0 0 80px rgba(0,255,198,0.15);
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 100%;
     }
 
     @keyframes borderSpin {
@@ -162,19 +168,51 @@
 
     canvas {
       display: block;
-      border-radius: 16px;
+      border-radius: 14px;
     }
 
     /* Hint */
     .hint {
-      margin-top: 18px;
-      font-size: 0.75rem;
+      margin-top: 10px;
+      font-size: clamp(0.55rem, 2vw, 0.75rem);
       color: rgba(255,255,255,0.25);
       letter-spacing: 2px;
       font-family: 'Orbitron', monospace;
+      text-align: center;
     }
 
     .hint b { color: rgba(0,255,198,0.6); font-weight: 600; }
+
+    /* D-pad for mobile */
+    .dpad {
+      display: none;
+      margin-top: 12px;
+      gap: 4px;
+      grid-template-columns: repeat(3, 52px);
+      grid-template-rows: repeat(3, 52px);
+    }
+
+    @media (pointer: coarse) {
+      .dpad { display: grid; }
+    }
+
+    .dpad-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      active-background: rgba(0,255,198,0.2);
+    }
+
+    .dpad-btn:active { background: rgba(0,255,198,0.2); }
+    .dpad-btn.center { background: transparent; border: none; }
 
     /* Score pop animation */
     .score-pop {
@@ -212,7 +250,19 @@
     <canvas id="canvas" width="420" height="420"></canvas>
   </div>
 
-  <div class="hint" id="hint">Press <b>SPACE</b> or <b>ENTER</b> to start</div>
+  <div class="hint" id="hint">Tap screen to start</div>
+
+  <div class="dpad">
+    <div></div>
+    <button class="dpad-btn" id="btn-up">▲</button>
+    <div></div>
+    <button class="dpad-btn" id="btn-left">◀</button>
+    <div class="dpad-btn center"></div>
+    <button class="dpad-btn" id="btn-right">▶</button>
+    <div></div>
+    <button class="dpad-btn" id="btn-down">▼</button>
+    <div></div>
+  </div>
 </div>
 
 <script>
@@ -227,11 +277,27 @@
 
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
-  const CELL = 21;
-  const COLS = Math.floor(canvas.width / CELL);
-  const ROWS = Math.floor(canvas.height / CELL);
-  const OX = (canvas.width  - COLS * CELL) / 2;
-  const OY = (canvas.height - ROWS * CELL) / 2;
+
+  let CELL, COLS, ROWS, OX, OY;
+
+  function resizeCanvas() {
+    const wrapper = document.querySelector('.canvas-wrapper');
+    const dpad = document.querySelector('.dpad');
+    const dpadH = dpad.offsetHeight > 0 ? dpad.offsetHeight + 12 : 0;
+    const maxW = wrapper.clientWidth - 6;
+    const maxH = wrapper.clientHeight - 6;
+    const size = Math.min(maxW, maxH);
+    CELL = Math.floor(size / 20);
+    COLS = 20;
+    ROWS = 20;
+    canvas.width  = COLS * CELL;
+    canvas.height = ROWS * CELL;
+    OX = 0;
+    OY = 0;
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', () => { resizeCanvas(); draw(); });
 
   let snake, dir, nextDir, food, score, best = 0, gameLoop, state;
   let particles = [];
@@ -561,6 +627,25 @@
       else if (dy < -20 && dir.y !== 1) nextDir = { x: 0, y: -1 };
     }
   }, { passive: true });
+
+  // ── D-pad buttons ────────────────────────────────────────────
+  function tryDir(dx, dy) {
+    if (state !== 'playing') { startGame(); return; }
+    if (dx === 1  && dir.x !== -1) nextDir = { x: 1,  y: 0  };
+    if (dx === -1 && dir.x !== 1)  nextDir = { x: -1, y: 0  };
+    if (dy === -1 && dir.y !== 1)  nextDir = { x: 0,  y: -1 };
+    if (dy === 1  && dir.y !== -1) nextDir = { x: 0,  y: 1  };
+  }
+
+  document.getElementById('btn-up').addEventListener('touchstart',    e => { e.preventDefault(); tryDir(0,-1); }, { passive: false });
+  document.getElementById('btn-down').addEventListener('touchstart',  e => { e.preventDefault(); tryDir(0, 1); }, { passive: false });
+  document.getElementById('btn-left').addEventListener('touchstart',  e => { e.preventDefault(); tryDir(-1,0); }, { passive: false });
+  document.getElementById('btn-right').addEventListener('touchstart', e => { e.preventDefault(); tryDir(1, 0); }, { passive: false });
+
+  // tap canvas to start
+  canvas.addEventListener('touchstart', e => {
+    if (state !== 'playing') { e.preventDefault(); startGame(); }
+  }, { passive: false });
 
   // ── Service Worker ───────────────────────────────────────────
   if ('serviceWorker' in navigator) {

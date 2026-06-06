@@ -143,6 +143,53 @@
     .db:active { background: rgba(0,255,198,0.3); border-color: #00ffc6; }
     .de { background: transparent; border: none !important; }
 
+    /* Leaderboard */
+    #leaderboard {
+      position: fixed;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(0,255,198,0.2);
+      border-radius: 16px;
+      padding: 14px 12px;
+      width: 110px;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+    /* Hide leaderboard on narrow screens — show inside game instead */
+    @media (max-width: 600px) {
+      #leaderboard { display: none; }
+    }
+    .lb-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.55rem;
+      letter-spacing: 3px;
+      color: #00ffc6;
+      text-align: center;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .lb-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 4px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.7);
+      font-family: -apple-system, sans-serif;
+    }
+    .lb-row:first-of-type { background: rgba(0,255,198,0.08); }
+    .lb-rank { color: rgba(255,255,255,0.3); font-size: 0.65rem; width: 16px; }
+    .lb-name { flex: 1; padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-score { color: #00ffc6; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .lb-row.gold   .lb-rank { color: #ffd700; }
+    .lb-row.silver .lb-rank { color: #c0c0c0; }
+    .lb-row.bronze .lb-rank { color: #cd7f32; }
+    .lb-empty { text-align: center; color: rgba(255,255,255,0.2); font-size: 0.65rem; margin-top: 8px; }
+
     /* Stars */
     .star {
       position: fixed; width: 2px; height: 2px;
@@ -154,6 +201,12 @@
   </style>
 </head>
 <body>
+
+<!-- Leaderboard (desktop left side) -->
+<div id="leaderboard">
+  <div class="lb-title">🏆 Top 5</div>
+  <div id="lb-list"><div class="lb-empty">No scores yet</div></div>
+</div>
 
 <div id="ui">
   <div id="title-area">
@@ -334,8 +387,40 @@
     else drawOverlay('SNAKE','#00ffc6',null);
   }
 
+  // ── Leaderboard ───────────────────────────────────────────────
+  function loadScores() {
+    try { return JSON.parse(localStorage.getItem('shadi-scores') || '[]'); }
+    catch { return []; }
+  }
+  function saveScore(s) {
+    let scores = loadScores();
+    scores.push({ name: 'Shadi', score: s, date: new Date().toLocaleDateString() });
+    scores.sort((a,b) => b.score - a.score);
+    scores = scores.slice(0, 5);
+    localStorage.setItem('shadi-scores', JSON.stringify(scores));
+    renderLeaderboard();
+  }
+  function renderLeaderboard() {
+    const list = document.getElementById('lb-list');
+    const scores = loadScores();
+    if (!scores.length) { list.innerHTML = '<div class="lb-empty">No scores yet</div>'; return; }
+    const medals = ['gold','silver','bronze','',''];
+    const icons  = ['🥇','🥈','🥉','4.','5.'];
+    list.innerHTML = scores.map((s,i) => `
+      <div class="lb-row ${medals[i]}">
+        <span class="lb-rank">${icons[i]}</span>
+        <span class="lb-name">${s.name}</span>
+        <span class="lb-score">${s.score}</span>
+      </div>`).join('');
+  }
+  renderLeaderboard();
+
   function startGame() { init(); state='playing'; restartLoop(); draw(); }
-  function endGame() { clearInterval(gameLoop); state='over'; draw(); drawOverlay('GAME OVER','#ff2d78',`Score: ${score}`); updateUI(); }
+  function endGame() {
+    clearInterval(gameLoop); state='over';
+    if (score > 0) saveScore(score);
+    draw(); drawOverlay('GAME OVER','#ff2d78',`Score: ${score}`); updateUI();
+  }
 
   function updateUI() {
     const sc=document.getElementById('score-display'), bc=document.getElementById('best-display');

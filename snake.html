@@ -190,6 +190,74 @@
     .lb-row.bronze .lb-rank { color: #cd7f32; }
     .lb-empty { text-align: center; color: rgba(255,255,255,0.2); font-size: 0.65rem; margin-top: 8px; }
 
+    /* Leaderboard popup */
+    #lb-popup {
+      position: fixed;
+      inset: 0;
+      background: rgba(5,5,16,0.88);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    #lb-popup-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0,255,198,0.3);
+      border-radius: 20px;
+      padding: 24px 20px;
+      width: 80vw;
+      max-width: 320px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 0 40px rgba(0,255,198,0.15);
+    }
+
+    #lb-popup-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 4px;
+      color: #00ffc6;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    #lb-popup-list .lb-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.04);
+    }
+    #lb-popup-list .lb-row.gold   { background: rgba(255,215,0,0.08); }
+    #lb-popup-list .lb-row.silver { background: rgba(192,192,192,0.08); }
+    #lb-popup-list .lb-row.bronze { background: rgba(205,127,50,0.08); }
+    #lb-popup-list .lb-rank { width: 24px; font-size: 1rem; }
+    #lb-popup-list .lb-name { flex: 1; padding: 0 8px; }
+    #lb-popup-list .lb-score { color: #00ffc6; font-weight: 700; font-size: 1rem; }
+    #lb-popup-list .lb-empty { text-align: center; color: rgba(255,255,255,0.3); padding: 12px 0; }
+
+    #lb-popup-close {
+      margin-top: 18px;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #00ffc6, #7b2fff);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #lb-popup-close:active { opacity: 0.8; }
+
     /* Stars */
     .star {
       position: fixed; width: 2px; height: 2px;
@@ -201,6 +269,15 @@
   </style>
 </head>
 <body>
+
+<!-- Leaderboard popup (mobile) -->
+<div id="lb-popup" style="display:none">
+  <div id="lb-popup-box">
+    <div id="lb-popup-title">🏆 Leaderboard</div>
+    <div id="lb-popup-list"></div>
+    <button id="lb-popup-close">PLAY AGAIN</button>
+  </div>
+</div>
 
 <!-- Leaderboard (desktop left side) -->
 <div id="leaderboard">
@@ -415,11 +492,34 @@
   }
   renderLeaderboard();
 
+  function showLbPopup() {
+    const scores = loadScores();
+    const medals = ['gold','silver','bronze','',''];
+    const icons  = ['🥇','🥈','🥉','4.','5.'];
+    const listEl = document.getElementById('lb-popup-list');
+    listEl.innerHTML = scores.length
+      ? scores.map((s,i) => `
+          <div class="lb-row ${medals[i]}">
+            <span class="lb-rank">${icons[i]}</span>
+            <span class="lb-name">${s.name}</span>
+            <span class="lb-score">${s.score}</span>
+          </div>`).join('')
+      : '<div class="lb-empty">No scores yet</div>';
+    document.getElementById('lb-popup').style.display = 'flex';
+  }
+
+  document.getElementById('lb-popup-close').addEventListener('click', () => {
+    document.getElementById('lb-popup').style.display = 'none';
+    startGame();
+  });
+
   function startGame() { init(); state='playing'; restartLoop(); draw(); }
   function endGame() {
     clearInterval(gameLoop); state='over';
     if (score > 0) saveScore(score);
     draw(); drawOverlay('GAME OVER','#ff2d78',`Score: ${score}`); updateUI();
+    // Show leaderboard popup on mobile after short delay
+    if ('ontouchstart' in window) setTimeout(showLbPopup, 900);
   }
 
   function updateUI() {

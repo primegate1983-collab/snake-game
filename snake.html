@@ -15,8 +15,8 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
-      width: 100%;
-      height: 100%;
+      width: 100dvw;
+      height: 100dvh;
       overflow: hidden;
       background: #050510;
       touch-action: none;
@@ -34,116 +34,148 @@
       pointer-events: none;
     }
 
+    /* ── Main layout ── */
     #ui {
       position: fixed;
       inset: 0;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: space-evenly;
+      padding: 8px 10px;
     }
 
+    /* Title */
+    #title-area { text-align: center; flex-shrink: 0; }
     #title {
       font-family: 'Orbitron', sans-serif;
       font-weight: 900;
+      font-size: clamp(1.4rem, 7vw, 2.6rem);
       letter-spacing: 8px;
       background: linear-gradient(135deg, #00ffc6, #7b2fff, #ff2d78);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       animation: titlePulse 3s ease-in-out infinite;
-      line-height: 1;
     }
     @keyframes titlePulse {
       0%,100% { filter: drop-shadow(0 0 12px rgba(123,47,255,0.6)); }
       50%      { filter: drop-shadow(0 0 24px rgba(0,255,198,0.8)); }
     }
-
-    #scores {
-      display: flex;
-      gap: 12px;
+    .subtitle {
+      font-size: clamp(0.5rem, 2vw, 0.65rem);
+      letter-spacing: 4px;
+      color: rgba(255,255,255,0.25);
+      margin-top: 2px;
     }
 
+    /* Scores */
+    #scores { display: flex; gap: 12px; flex-shrink: 0; }
     .scard {
-      background: rgba(255,255,255,0.06);
-      border-radius: 10px;
       text-align: center;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 5px 20px;
+      min-width: 90px;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     }
     .scard:first-child { border: 1px solid rgba(0,255,198,0.35); }
     .scard:last-child  { border: 1px solid rgba(123,47,255,0.35); }
-    .slabel {
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.35);
-      font-weight: 600;
-    }
-    .sval { font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+    .slabel { font-size: clamp(0.5rem, 2vw, 0.6rem); letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.3); }
+    .sval   { font-size: clamp(1.1rem, 5vw, 1.6rem); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
     #score-display { color: #00ffc6; }
     #best-display  { color: #c77dff; }
     .score-pop { animation: pop 0.3s ease; }
-    @keyframes pop { 40% { transform: scale(1.5); } }
+    @keyframes pop { 40% { transform: scale(1.4); } }
+
+    /* Canvas — square, takes available space */
+    #canvas-area {
+      flex-shrink: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Limit to square fitting in the viewport width */
+      width: min(100vw - 20px, 55dvh);
+      height: min(100vw - 20px, 55dvh);
+    }
 
     #canvas-wrap {
       border-radius: 14px;
       padding: 3px;
       background: linear-gradient(135deg, #00ffc6, #7b2fff, #ff2d78, #00ffc6);
       background-size: 300% 300%;
-      animation: spin 4s linear infinite;
+      animation: borderSpin 4s linear infinite;
       box-shadow: 0 0 30px rgba(123,47,255,0.5), 0 0 60px rgba(0,255,198,0.1);
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    @keyframes spin {
+    @keyframes borderSpin {
       0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}
     }
     canvas { display: block; border-radius: 12px; }
 
+    /* D-pad */
     #dpad {
+      flex-shrink: 0;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
+      grid-template-columns: repeat(3, 56px);
+      grid-template-rows: repeat(3, 56px);
+      gap: 5px;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      /* Desktop: hide dpad */
+      #dpad { display: none; }
     }
     .db {
-      background: rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 12px;
       color: rgba(255,255,255,0.85);
+      font-size: 1.3rem;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      font-size: 1.4rem;
+      cursor: pointer;
     }
-    .db:active { background: rgba(0,255,198,0.25); border-color: #00ffc6; }
-    .de { background: transparent; border: none; }
+    .db:active { background: rgba(0,255,198,0.3); border-color: #00ffc6; }
+    .de { background: transparent; border: none !important; }
 
-    /* stars */
+    /* Stars */
     .star {
-      position: fixed;
-      width: 2px; height: 2px;
+      position: fixed; width: 2px; height: 2px;
       background: white; border-radius: 50%;
       animation: twinkle var(--d) ease-in-out infinite alternate;
-      opacity: var(--o);
-      pointer-events: none;
+      opacity: var(--o); pointer-events: none;
     }
-    @keyframes twinkle { to { opacity: 0.05; } }
+    @keyframes twinkle { to { opacity: 0.04; } }
   </style>
 </head>
 <body>
 
 <div id="ui">
-  <div id="title">SNAKE</div>
+  <div id="title-area">
+    <div id="title">SNAKE</div>
+    <div class="subtitle">arcade classic</div>
+  </div>
 
   <div id="scores">
-    <div class="scard" id="sc1">
-      <div class="slabel" id="sl1">Score</div>
+    <div class="scard">
+      <div class="slabel">Score</div>
       <div class="sval" id="score-display">0</div>
     </div>
-    <div class="scard" id="sc2">
-      <div class="slabel" id="sl2">Best</div>
+    <div class="scard">
+      <div class="slabel">Best</div>
       <div class="sval" id="best-display">0</div>
     </div>
   </div>
 
-  <div id="canvas-wrap">
-    <canvas id="canvas"></canvas>
+  <div id="canvas-area">
+    <div id="canvas-wrap">
+      <canvas id="canvas"></canvas>
+    </div>
   </div>
 
   <div id="dpad">
@@ -154,7 +186,7 @@
 </div>
 
 <script>
-  // ── Stars ─────────────────────────────────────────────────────
+  // Stars
   for (let i = 0; i < 80; i++) {
     const s = document.createElement('div');
     s.className = 'star';
@@ -162,70 +194,29 @@
     document.body.appendChild(s);
   }
 
-  // ── Layout sizes ──────────────────────────────────────────────
+  // Size the canvas to exactly fit #canvas-area
   const COLS = 20, ROWS = 20;
-  const isMobile = ('ontouchstart' in window) || window.innerWidth < 600;
-
-  const W = window.innerWidth;
-  const H = window.innerHeight;
-
-  // Allocate heights
-  const titleH  = isMobile ? Math.round(H * 0.09) : 70;
-  const scoreH  = isMobile ? Math.round(H * 0.11) : 80;
-  const dpadH   = isMobile ? Math.round(H * 0.22) : 0;
-  const padV    = isMobile ? Math.round(H * 0.015) : 10;
-  const canvasH = H - titleH - scoreH - dpadH - padV * 4;
-  const canvasW = W - 24;
-  const canvasSize = Math.floor(Math.min(canvasW, canvasH) / COLS) * COLS;
-  const CELL = canvasSize / COLS;
-
-  // Apply title
-  const titleEl = document.getElementById('title');
-  titleEl.style.fontSize = Math.round(titleH * 0.55) + 'px';
-  titleEl.style.paddingTop = padV + 'px';
-  titleEl.style.marginBottom = padV + 'px';
-
-  // Apply scores
-  const scoresEl = document.getElementById('scores');
-  scoresEl.style.marginBottom = padV + 'px';
-  const cardW = Math.round(W * 0.38);
-  const cardH = scoreH;
-  ['sc1','sc2'].forEach(id => {
-    const el = document.getElementById(id);
-    el.style.width  = cardW + 'px';
-    el.style.height = cardH + 'px';
-    el.style.padding = Math.round(cardH * 0.1) + 'px 0';
-  });
-  ['sl1','sl2'].forEach(id => {
-    document.getElementById(id).style.fontSize = Math.round(cardH * 0.22) + 'px';
-  });
-  ['score-display','best-display'].forEach(id => {
-    document.getElementById(id).style.fontSize = Math.round(cardH * 0.5) + 'px';
-  });
-
-  // Apply canvas
   const canvas = document.getElementById('canvas');
-  canvas.width  = canvasSize;
-  canvas.height = canvasSize;
-  const wrapEl = document.getElementById('canvas-wrap');
-  wrapEl.style.marginBottom = padV + 'px';
-
-  // Apply dpad
-  const dpadEl = document.getElementById('dpad');
-  const btnSize = Math.round(dpadH / 3.5);
-  const dpadTotal = btnSize * 3 + 8;
-  dpadEl.style.width  = dpadTotal + 'px';
-  dpadEl.style.height = dpadH + 'px';
-  dpadEl.style.gap    = '4px';
-  document.querySelectorAll('.db,.de').forEach(el => {
-    el.style.width  = btnSize + 'px';
-    el.style.height = btnSize + 'px';
-  });
-  if (!isMobile) dpadEl.style.display = 'none';
-
-  // ── Game ──────────────────────────────────────────────────────
   const ctx = canvas.getContext('2d');
-  let snake, dir, nextDir, food, score, best = 0, gameLoop, state;
+  let CELL;
+
+  function sizeCanvas() {
+    const area = document.getElementById('canvas-area');
+    const s = Math.floor(Math.min(area.clientWidth, area.clientHeight) / COLS) * COLS;
+    CELL = s / COLS;
+    canvas.width = s;
+    canvas.height = s;
+  }
+
+  // Wait for layout then size
+  requestAnimationFrame(() => {
+    sizeCanvas();
+    drawOverlay('SNAKE', '#00ffc6', null);
+  });
+  window.addEventListener('resize', () => { sizeCanvas(); redraw(); });
+
+  // Game
+  let snake, dir, nextDir, food, score, best = 0, gameLoop, state = 'start';
   let particles = [], eatAnim = 0;
 
   const SPEED_START = 220, SPEED_MIN = 65, SPEED_STEP = 8;
@@ -234,13 +225,13 @@
 
   function spawnParticles(gx, gy) {
     const cx = gx*CELL+CELL/2, cy = gy*CELL+CELL/2;
-    const colors = ['#ff2d78','#00ffc6','#c77dff','#ffcc00'];
-    for (let i = 0; i < 14; i++) {
-      const a = Math.random()*Math.PI*2, sp = 1.5+Math.random()*3;
-      particles.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
-        life:1,decay:0.05+Math.random()*0.04,r:2+Math.random()*2.5,
-        color:colors[Math.floor(Math.random()*colors.length)]});
-    }
+    ['#ff2d78','#00ffc6','#c77dff','#ffcc00'].forEach(color => {
+      for (let i = 0; i < 4; i++) {
+        const a = Math.random()*Math.PI*2, sp = 1.5+Math.random()*3;
+        particles.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
+          life:1,decay:0.05+Math.random()*0.04,r:1.5+Math.random()*2,color});
+      }
+    });
   }
   function tickParticles() {
     particles = particles.filter(p=>p.life>0);
@@ -248,8 +239,7 @@
   }
   function drawParticles() {
     particles.forEach(p=>{
-      ctx.save();ctx.globalAlpha=p.life;ctx.fillStyle=p.color;
-      ctx.shadowBlur=8;ctx.shadowColor=p.color;
+      ctx.save();ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.shadowBlur=8;ctx.shadowColor=p.color;
       ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore();
     });
   }
@@ -261,10 +251,10 @@
     placeFood(); updateUI();
   }
   function placeFood() {
-    let pos;
-    do { pos={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)}; }
-    while(snake.some(s=>s.x===pos.x&&s.y===pos.y));
-    food=pos;
+    let p;
+    do { p={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)}; }
+    while(snake.some(s=>s.x===p.x&&s.y===p.y));
+    food=p;
   }
 
   function update() {
@@ -284,11 +274,12 @@
   }
 
   function draw() {
-    ctx.fillStyle='#07071a'; ctx.fillRect(0,0,canvasSize,canvasSize);
-    // Grid
+    const S = canvas.width;
+    ctx.fillStyle='#07071a'; ctx.fillRect(0,0,S,S);
     ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=0.5;
-    for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,canvasSize);ctx.stroke();}
-    for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(canvasSize,y*CELL);ctx.stroke();}
+    for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,S);ctx.stroke();}
+    for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(S,y*CELL);ctx.stroke();}
+
     // Food
     const t=Date.now()/600;
     const fx=food.x*CELL+CELL/2, fy=food.y*CELL+CELL/2, fr=(CELL/2-2)*(1+0.14*Math.sin(t));
@@ -296,6 +287,7 @@
     const fg=ctx.createRadialGradient(fx,fy,0,fx,fy,fr);
     fg.addColorStop(0,'#fff'); fg.addColorStop(0.3,'#ff6fa8'); fg.addColorStop(1,'#ff2d78');
     ctx.fillStyle=fg; ctx.beginPath(); ctx.arc(fx,fy,fr,0,Math.PI*2); ctx.fill(); ctx.restore();
+
     // Snake
     snake.forEach((seg,i)=>{
       const x=seg.x*CELL+1, y=seg.y*CELL+1, w=CELL-2, h=CELL-2;
@@ -309,6 +301,7 @@
       else{grd.addColorStop(0,`rgb(${r},${g},${b})`);grd.addColorStop(1,`rgb(${Math.round(r*.6)},${Math.round(g*.6)},${Math.round(b*.6)})`);}
       ctx.fillStyle=grd; ctx.beginPath(); ctx.roundRect(x,y,w,h,i===0?6:4); ctx.fill(); ctx.restore();
     });
+
     // Eyes
     const hx=snake[0].x*CELL, hy=snake[0].y*CELL;
     const em={'1,0':[[13,5],[13,14]],'-1,0':[[5,5],[5,14]],'0,-1':[[5,5],[13,5]],'0,1':[[5,14],[13,14]]};
@@ -320,18 +313,25 @@
   }
 
   function drawOverlay(title, color, sub) {
-    ctx.fillStyle='rgba(5,5,16,0.82)'; ctx.fillRect(0,0,canvasSize,canvasSize);
-    const cx=canvasSize/2, cy=canvasSize/2;
+    const S=canvas.width, cx=S/2, cy=S/2;
+    ctx.fillStyle='rgba(5,5,16,0.82)'; ctx.fillRect(0,0,S,S);
     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.roundRect(cx-130,cy-70,260,140,16); ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.beginPath(); ctx.roundRect(cx-120,cy-65,240,130,16); ctx.fill(); ctx.stroke(); ctx.restore();
     ctx.textAlign='center';
-    ctx.font=`bold ${Math.round(CELL*1.5)}px Orbitron,sans-serif`;
+    const fs=Math.round(CELL*1.4);
+    ctx.font=`bold ${fs}px Orbitron,sans-serif`;
     ctx.fillStyle=color; ctx.shadowBlur=18; ctx.shadowColor=color;
-    ctx.fillText(title,cx,cy-15); ctx.shadowBlur=0;
-    if(sub){ctx.font=`${Math.round(CELL*.7)}px -apple-system,sans-serif`;ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fillText(sub,cx,cy+18);}
-    ctx.font=`${Math.round(CELL*.6)}px -apple-system,sans-serif`;
+    ctx.fillText(title,cx,cy-12); ctx.shadowBlur=0;
+    if(sub){ctx.font=`${Math.round(CELL*.68)}px -apple-system,sans-serif`;ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fillText(sub,cx,cy+16);}
+    ctx.font=`${Math.round(CELL*.58)}px -apple-system,sans-serif`;
     ctx.fillStyle='rgba(0,255,198,0.6)';
-    ctx.fillText(isMobile?'TAP TO PLAY':'PRESS SPACE',cx,cy+50);
+    ctx.fillText(('ontouchstart' in window)?'TAP TO PLAY':'PRESS SPACE',cx,cy+46);
+  }
+
+  function redraw() {
+    if(state==='playing') draw();
+    else if(state==='over'){draw();drawOverlay('GAME OVER','#ff2d78',`Score: ${score}`);}
+    else drawOverlay('SNAKE','#00ffc6',null);
   }
 
   function startGame() { init(); state='playing'; restartLoop(); draw(); }
@@ -343,7 +343,6 @@
     sc.classList.remove('score-pop'); void sc.offsetWidth; sc.classList.add('score-pop');
   }
 
-  // Keyboard
   document.addEventListener('keydown', e=>{
     if((e.code==='Space'||e.code==='Enter')&&state!=='playing'){startGame();return;}
     if(e.code==='Escape'&&state==='playing'){clearInterval(gameLoop);state='paused';draw();drawOverlay('PAUSED','#c77dff',null);return;}
@@ -355,7 +354,6 @@
     if(nd&&!(nd.x===-dir.x&&nd.y===-dir.y))nextDir=nd;
   });
 
-  // D-pad
   function tryDir(dx,dy){
     if(state!=='playing'){startGame();return;}
     if(dx===1&&dir.x!==-1)nextDir={x:1,y:0};
@@ -363,17 +361,16 @@
     else if(dy===-1&&dir.y!==1)nextDir={x:0,y:-1};
     else if(dy===1&&dir.y!==-1)nextDir={x:0,y:1};
   }
+
   [{id:'btn-up',dx:0,dy:-1},{id:'btn-down',dx:0,dy:1},{id:'btn-left',dx:-1,dy:0},{id:'btn-right',dx:1,dy:0}]
     .forEach(({id,dx,dy})=>{
       document.getElementById(id).addEventListener('touchstart',e=>{e.preventDefault();tryDir(dx,dy);},{passive:false});
       document.getElementById(id).addEventListener('mousedown',()=>tryDir(dx,dy));
     });
 
-  // Tap canvas
   canvas.addEventListener('touchstart',e=>{e.preventDefault();if(state!=='playing')startGame();},{passive:false});
   canvas.addEventListener('click',()=>{if(state!=='playing')startGame();});
 
-  // Swipe
   let t0=null;
   canvas.addEventListener('touchstart',e=>{t0=e.touches[0];},{passive:true});
   canvas.addEventListener('touchend',e=>{
@@ -383,12 +380,7 @@
     else tryDir(0,dy>20?1:-1);
   },{passive:true});
 
-  // Service Worker
   if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
-
-  // Boot
-  state='start';
-  drawOverlay('SNAKE','#00ffc6',null);
 </script>
 </body>
 </html>

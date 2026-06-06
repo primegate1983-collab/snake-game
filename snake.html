@@ -464,39 +464,38 @@
     else drawOverlay('SNAKE','#00ffc6',null);
   }
 
-  // ── Leaderboard ───────────────────────────────────────────────
-  function loadScores() {
-    try { return JSON.parse(localStorage.getItem('shadi-scores') || '[]'); }
-    catch { return []; }
-  }
-  function saveScore(s) {
-    let scores = loadScores();
-    scores.push({ name: 'Shadi', score: s, date: new Date().toLocaleDateString() });
-    scores.sort((a,b) => b.score - a.score);
-    scores = scores.slice(0, 5);
-    localStorage.setItem('shadi-scores', JSON.stringify(scores));
-    renderLeaderboard();
-  }
-  function renderLeaderboard() {
-    const list = document.getElementById('lb-list');
-    const scores = loadScores();
-    if (!scores.length) { list.innerHTML = '<div class="lb-empty">No scores yet</div>'; return; }
-    const medals = ['gold','silver','bronze','',''];
-    const icons  = ['🥇','🥈','🥉','4.','5.'];
-    list.innerHTML = scores.map((s,i) => `
-      <div class="lb-row ${medals[i]}">
-        <span class="lb-rank">${icons[i]}</span>
-        <span class="lb-name">${s.name}</span>
-        <span class="lb-score">${s.score}</span>
-      </div>`).join('');
-  }
-  renderLeaderboard();
+  // ── Supabase Leaderboard ──────────────────────────────────────
+  const SB_URL = 'https://aleaozvtixxktwyafmdy.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsZWFvenZ0aXh4a3R3eWFmbWR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NjQ3NTUsImV4cCI6MjA5NjM0MDc1NX0.O2BfQzGacytH8KJUuJSF8_h8KOF0VaGGkzxGVuCGWFg';
 
-  function showLbPopup() {
-    const scores = loadScores();
-    const medals = ['gold','silver','bronze','',''];
-    const icons  = ['🥇','🥈','🥉','4.','5.'];
-    const listEl = document.getElementById('lb-popup-list');
+  async function fetchScores() {
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/scores?select=name,score&order=score.desc&limit=5`, {
+        headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
+      });
+      return await res.json();
+    } catch { return []; }
+  }
+
+  async function saveScore(playerName, s) {
+    try {
+      await fetch(`${SB_URL}/rest/v1/scores`, {
+        method: 'POST',
+        headers: {
+          apikey: SB_KEY,
+          Authorization: `Bearer ${SB_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({ name: playerName, score: s })
+      });
+    } catch {}
+  }
+
+  const medals = ['gold','silver','bronze','',''];
+  const icons  = ['🥇','🥈','🥉','4.','5.'];
+
+  function renderRows(scores, listEl) {
     listEl.innerHTML = scores.length
       ? scores.map((s,i) => `
           <div class="lb-row ${medals[i]}">
@@ -505,7 +504,32 @@
             <span class="lb-score">${s.score}</span>
           </div>`).join('')
       : '<div class="lb-empty">No scores yet</div>';
+  }
+
+  async function renderLeaderboard() {
+    const list = document.getElementById('lb-list');
+    list.innerHTML = '<div class="lb-empty">Loading...</div>';
+    const scores = await fetchScores();
+    renderRows(scores, list);
+  }
+  renderLeaderboard();
+
+  async function showLbPopup() {
+    const listEl = document.getElementById('lb-popup-list');
+    listEl.innerHTML = '<div class="lb-empty">Loading...</div>';
     document.getElementById('lb-popup').style.display = 'flex';
+    const scores = await fetchScores();
+    renderRows(scores, listEl);
+  }
+
+  // Ask player name then save score
+  async function handleEndGame() {
+    let playerName = prompt('Game Over! Enter your name for the leaderboard:');
+    if (!playerName || !playerName.trim()) playerName = 'Anonymous';
+    playerName = playerName.trim().slice(0, 12);
+    await saveScore(playerName, score);
+    renderLeaderboard();
+    if ('ontouchstart' in window) showLbPopup();
   }
 
   document.getElementById('lb-popup-close').addEventListener('click', () => {
@@ -516,10 +540,8 @@
   function startGame() { init(); state='playing'; restartLoop(); draw(); }
   function endGame() {
     clearInterval(gameLoop); state='over';
-    if (score > 0) saveScore(score);
     draw(); drawOverlay('GAME OVER','#ff2d78',`Score: ${score}`); updateUI();
-    // Show leaderboard popup on mobile after short delay
-    if ('ontouchstart' in window) setTimeout(showLbPopup, 900);
+    if (score > 0) setTimeout(handleEndGame, 600);
   }
 
   function updateUI() {
